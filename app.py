@@ -5,7 +5,7 @@ import tensorflow as tf
 from PIL import Image, ImageOps
 
 # Load the trained model
-model = tf.keras.models.load_model('mnist_digit_classifier.h5')
+model = tf.keras.models.load_model('mnist_digit_classifier (1).h5')
 
 st.title("MNIST Digit Recognition App")
 st.markdown("Draw a digit (0-9) below and click **Predict** to see the result.")
