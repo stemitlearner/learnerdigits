@@ -1,8 +1,8 @@
 import streamlit as st
+from streamlit_drawable_canvas import st_canvas
 import numpy as np
 import tensorflow as tf
 from PIL import Image, ImageOps
-import cv2
 
 # Load the trained model
 model = tf.keras.models.load_model('mnist_digit_classifier.h5')
@@ -10,8 +10,8 @@ model = tf.keras.models.load_model('mnist_digit_classifier.h5')
 st.title("MNIST Digit Recognition App")
 st.markdown("Draw a digit (0-9) below and click **Predict** to see the result.")
 
-# Canvas for drawing
-canvas_result = st.canvas(
+# Create a canvas component
+canvas_result = st_canvas(
     fill_color="black",
     stroke_width=15,
     stroke_color="white",
@@ -26,22 +26,19 @@ if canvas_result.image_data is not None:
     img = canvas_result.image_data
 
     if st.button("Predict"):
-        # Convert to grayscale and resize to 28x28
-        img = cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_RGBA2GRAY)
-        img = cv2.resize(img, (28, 28))
-        img = img / 255.0  # Normalize
+        # Convert to grayscale and resize
+        img_pil = Image.fromarray((img[:, :, 0:3] * 255).astype(np.uint8))
+        img_pil = img_pil.convert("L")  # Convert to grayscale
+        img_pil = img_pil.resize((28, 28))
+        img_array = np.asarray(img_pil) / 255.0
+        img_array = 1 - img_array  # Invert to match MNIST
 
-        # Invert colors because MNIST is white on black
-        img = 1 - img
-
-        # Expand dimensions to match model input
-        img_input = np.expand_dims(img, axis=(0, -1))
-        img_input = img_input.reshape(1, 28, 28)
+        # Prepare for model
+        img_array = img_array.reshape(1, 28, 28)
 
         # Predict
-        prediction = model.predict(img_input)
+        prediction = model.predict(img_array)
         predicted_digit = np.argmax(prediction)
 
         st.write(f"### Predicted Digit: **{predicted_digit}**")
         st.bar_chart(prediction[0])
-
